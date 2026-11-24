@@ -1,0 +1,168 @@
+{
+ "grid": {
+  "lstm": [
+   {
+    "hidden": 32,
+    "window": 7,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3209
+   },
+   {
+    "hidden": 32,
+    "window": 7,
+    "dropout": 0.3,
+    "val_rmse_log": 0.31
+   },
+   {
+    "hidden": 32,
+    "window": 14,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3317
+   },
+   {
+    "hidden": 32,
+    "window": 14,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3153
+   },
+   {
+    "hidden": 32,
+    "window": 28,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3255
+   },
+   {
+    "hidden": 32,
+    "window": 28,
+    "dropout": 0.3,
+    "val_rmse_log": 0.304
+   },
+   {
+    "hidden": 64,
+    "window": 7,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3221
+   },
+   {
+    "hidden": 64,
+    "window": 7,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3231
+   },
+   {
+    "hidden": 64,
+    "window": 14,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3229
+   },
+   {
+    "hidden": 64,
+    "window": 14,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3145
+   },
+   {
+    "hidden": 64,
+    "window": 28,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3221
+   },
+   {
+    "hidden": 64,
+    "window": 28,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3178
+   }
+  ],
+  "gru": [
+   {
+    "hidden": 32,
+    "window": 7,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3744
+   },
+   {
+    "hidden": 32,
+    "window": 7,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3553
+   },
+   {
+    "hidden": 32,
+    "window": 14,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3564
+   },
+   {
+    "hidden": 32,
+    "window": 14,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3609
+   },
+   {
+    "hidden": 32,
+    "window": 28,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3622
+   },
+   {
+    "hidden": 32,
+    "window": 28,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3647
+   },
+   {
+    "hidden": 64,
+    "window": 7,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3149
+   },
+   {
+    "hidden": 64,
+    "window": 7,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3137
+   },
+   {
+    "hidden": 64,
+    "window": 14,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3279
+   },
+   {
+    "hidden": 64,
+    "window": 14,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3133
+   },
+   {
+    "hidden": 64,
+    "window": 28,
+    "dropout": 0.1,
+    "val_rmse_log": 0.3372
+   },
+   {
+    "hidden": 64,
+    "window": 28,
+    "dropout": 0.3,
+    "val_rmse_log": 0.3308
+   }
+  ]
+ },
+ "lstm": {
+  "params": {
+   "hidden": 32,
+   "window": 28,
+   "dropout": 0.3
+  },
+  "val_rmse_log": 0.304
+ },
+ "gru": {
+  "params": {
+   "hidden": 64,
+   "window": 14,
+   "dropout": 0.3
+  },
+  "val_rmse_log": 0.3133
+ }
+}

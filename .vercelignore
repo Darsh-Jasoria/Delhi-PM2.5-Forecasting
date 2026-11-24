@@ -1,0 +1,6 @@
+# Only the website (index.html), the report, the slides and the run guide need to be published.
+code
+data
+docs
+results
+README.md

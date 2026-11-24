@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delhi PM2.5 Forecasting Dashboard</title>
+<meta name="description" content="Interactive comparison of classical, machine-learning and deep-learning models forecasting Delhi's daily PM2.5: Time Series Analysis (CSET 369), Milestone 3.">
+<meta property="og:title" content="Delhi PM2.5 Forecasting Dashboard"><meta property="og:description" content="Next-day and week-ahead PM2.5 forecasts: ARIMA vs XGBoost, LightGBM, LSTM, GRU and an ensemble, with archived weather forecasts.">
+<meta name="theme-color" content="#1f8a7d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f8a7d'/%3E%3Cpath d='M10 44l10-14 9 8 11-20 14 16' fill='none' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f7f7;--card:#fff;--ink:#1d2b2e;--mut:#5b7075;--line:#d9e2e3;--teal:#1f8a7d;--orange:#c4801a;--navy:#27476e;--red:#d1503f;--purple:#7a5c9e;--soft:#e8f3f1}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1719;--card:#172326;--ink:#e6efef;--mut:#9db1b5;--line:#2a3b3f;--soft:#1d3a38}}
+:root[data-theme=dark]{--bg:#0f1719;--card:#172326;--ink:#e6efef;--mut:#9db1b5;--line:#2a3b3f;--soft:#1d3a38}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:linear-gradient(120deg,#1f8a7d,#27476e);color:#fff;padding:22px 24px 18px}
+header h1{margin:0 0 4px;font-size:24px}header p{margin:0;opacity:.9;font-size:13px}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
+nav{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);display:flex;gap:4px;padding:6px 16px;overflow-x:auto}
+nav a{color:var(--mut);text-decoration:none;padding:6px 12px;border-radius:6px;font-size:13px;white-space:nowrap}nav a:hover{background:var(--soft);color:var(--ink)}
+.grid{display:grid;gap:14px}.k4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.c2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:30px;font-weight:700;line-height:1.1}.kpi .l{color:var(--mut);font-size:12.5px;margin-top:4px}.kpi .s{font-size:12px;margin-top:6px;color:var(--mut)}
+h2{font-size:18px;margin:26px 0 4px}h2+p.sub{margin:0 0 10px;color:var(--mut);font-size:13px}h3{margin:0 0 8px;font-size:14px}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:10px}.ctrl label{font-size:12px;color:var(--mut);margin-right:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{background:var(--card);color:var(--ink);border:0;padding:6px 12px;cursor:pointer;font-size:12.5px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--teal);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:var(--card);color:var(--ink);user-select:none}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}.chip.off{opacity:.38}
+canvas{width:100%;display:block}.tip{position:fixed;pointer-events:none;background:#10191b;color:#fff;border-radius:6px;padding:7px 10px;font-size:12px;display:none;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}th,td{padding:7px 14px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-weight:600;cursor:pointer;white-space:nowrap}
+tr.best td{background:var(--soft);font-weight:600}td.b{font-weight:700;color:var(--teal)}.tag{font-size:10.5px;border-radius:4px;padding:1px 6px;margin-left:6px;color:#fff}
+.note{font-size:12px;color:var(--mut)}.pos{color:var(--teal);font-weight:600}.neg{color:var(--red);font-weight:600}
+.m2{border-left:4px solid var(--orange)}
+.scroll{overflow-x:auto}
+
+html{scroll-behavior:smooth;scroll-padding-top:56px}body{font-size:15px}
+.seg button{padding:8px 14px;font-size:13.5px}.ctrl label{font-size:12.5px;font-weight:600}
+.start{border-left:5px solid var(--teal);margin-top:16px}.start p{margin:6px 0;font-size:15.5px}
+.steps{margin:8px 0 0;padding-left:20px;color:var(--mut)}.steps li{margin:3px 0}.steps b{color:var(--ink)}
+.pill{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer}.pill:hover{border-color:var(--teal);color:var(--teal)}
+.quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}.quick span{font-size:12.5px;color:var(--mut);font-weight:600}
+.plain{margin:10px 0 4px;padding:10px 14px;background:var(--soft);border-radius:8px;font-size:15px}
+.cmp{display:grid;gap:18px;grid-template-columns:minmax(300px,1fr) auto;align-items:start}#m2t{width:100%}#m2t td,#m2t th{padding:8px 12px}
+@media (max-width:900px){.cmp{grid-template-columns:1fr}}
+details.sec{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:10px 0}
+details.sec>summary{cursor:pointer;padding:14px 16px;font-weight:600;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.sec>summary::-webkit-details-marker{display:none}details.sec>summary::after{content:"+";font-size:22px;color:var(--teal)}details.sec[open]>summary::after{content:"\2212"}
+details.sec>.body{padding:0 16px 16px}details.sec .hint{font-weight:400;font-size:12.5px;color:var(--mut);margin-left:8px}
+.gloss{margin:0;display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:6px 14px}.gloss dt{font-weight:700;color:var(--teal)}.gloss dd{margin:0}
+.fab{position:fixed;right:16px;bottom:16px;width:42px;height:42px;border-radius:50%;background:var(--teal);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:6}
+@media (max-width:700px){.c2{grid-template-columns:1fr}.gloss{grid-template-columns:1fr}.gloss dt{margin-top:6px}.seg{flex-wrap:wrap}}
+</style></head><body>
+<header id="top"><div class="wrap" style="padding:0 16px"><h1>Forecasting Delhi's air pollution (PM2.5)</h1>
+<p style="font-size:15px;margin-bottom:6px">Which model predicts tomorrow's and next week's pollution best? The old Milestone 2 model against new machine-learning and deep-learning models.</p>
+<p>Time Series Analysis (CSET 369) &nbsp;|&nbsp; Milestone 3 &nbsp;|&nbsp; Mahak Soni (Team Leader), Darsh Jasoria, Palak Aitwani &nbsp;|&nbsp; Faculty: Anurag Choubey &nbsp;|&nbsp; Data: <span id="span"></span></p></div></header>
+<nav><a href="#start">Start here</a><a href="#compare">1. Compare models</a><a href="#forecast">2. See forecasts</a><a href="#why">3. Why it works</a><a href="#details">More details</a><a href="#words">Words explained</a><a href="#team">Team</a></nav>
+<div class="wrap">
+<noscript><p class="card" style="margin-top:10px">This page needs JavaScript. Please enable it in your browser.</p></noscript>
+<p id="jsfail" class="card" style="display:none;margin-top:10px;border-left:5px solid var(--red)"><b>The interactive parts could not load.</b> Please open this file in a recent Chrome, Edge, Firefox or Safari (not in a file preview or e-mail viewer). The report and slides can still be downloaded at the bottom of the page.</p>
+<div id="start" class="card start"><h2 style="margin:0 0 4px;font-size:20px">Start here: the answer in 10 seconds</h2>
+<p>We compared the old model from Milestone 2 (<b>ARIMA</b>) with new models. Over four seasons, the new <b>Ensemble</b> model's forecast for tomorrow has <b><span id="s1"></span>% less error</b> and its forecast for the next 7 days has <b><span id="s2"></span>% less error</b>. It names the right pollution level on <b><span id="s3"></span>% of days</b> (old model: <span id="s4"></span>%).</p>
+<ol class="steps"><li><b>Compare models:</b> pick what to compare; the highlighted row is the best.</li><li><b>See forecasts:</b> draw any models against what really happened.</li><li><b>Why it works:</b> what made the difference. Open "More details" for the full evidence, and "Words explained" if a term is new.</li></ol></div>
+<div id="kpi" class="grid k4" style="margin-top:14px"></div>
+
+<h2 id="compare">1. Compare the models</h2><p class="sub">Choose what to compare. The highlighted row is the best one. Smaller error is better, except for "Fit" and "Right category", where bigger is better.</p>
+<div class="card"><div class="quick"><span>Quick views:</span><button class="pill" onclick="setView('roll','h1','RMSE')">Tomorrow, all seasons</button><button class="pill" onclick="setView('roll','h7','RMSE')">Next 7 days, all seasons</button><button class="pill" onclick="setView('hold','h1','RMSE')">Milestone 2 test window</button><button class="pill" onclick="setView('roll','h1','CatAcc')">Right pollution level</button></div>
+<div class="ctrl">
+<span><label>Test period</label><span class="seg" id="sSet"><button data-v="hold" class="on" title="The last 90 days, the same test as Milestone 2">Milestone 2 window (90 days)</button><button data-v="roll" title="Four test periods, one per season, Oct 2025 to Oct 2026">All four seasons (360 days)</button></span></span>
+<span><label>Forecast for</label><span class="seg" id="sHor"><button data-v="h1" class="on">Tomorrow</button><button data-v="h7" title="Forecasts for days 1 to 7, issued every 7 days">Next 7 days</button></span></span>
+<span><label>Measure</label><span class="seg" id="sMet"><button data-v="RMSE" class="on" title="RMSE: typical forecast error in µg/m³; big misses count more">Typical error (RMSE)</button><button data-v="MAE" title="MAE: average size of the error in µg/m³">Average error (MAE)</button><button data-v="MAPE" title="MAPE: error as a percentage of the real value">% error (MAPE)</button><button data-v="R2" title="R²: how much of the ups and downs the forecast captures; 1 is perfect">Fit (R²)</button><button data-v="CatAcc" title="Share of days where the forecast names the right pollution level (Good, Satisfactory, Moderate, Poor, Very poor, Severe)">Right category (%)</button></span></span>
+<span><label>Models shown</label><span class="seg" id="sMod"><button data-v="key" class="on">Key models</button><button data-v="all">All 12 models</button></span></span></div>
+<p class="plain" id="plain"></p>
+<div class="cmp"><div><canvas id="bar" height="380"></canvas></div><div class="scroll"><table id="tbl"></table></div></div>
+<p class="note" id="cmpNote"></p></div>
+
+<h2 id="forecast">2. See the forecasts</h2><p class="sub">The black line is what really happened. The closer a model's line is to the black one, the better. Hover over the chart to read exact values. The red dashed line is India's 60 µg/m³ daily limit.</p>
+<div class="card"><div class="ctrl"><span><label>Forecast for</label><span class="seg" id="fHor"><button data-v="1" class="on">Tomorrow</button><button data-v="7">Next 7 days</button></span></span>
+<span><label>Period</label><span class="seg" id="fFold"></span></span></div>
+<div class="quick"><span>Models:</span><button class="pill" onclick="selPreset('pair')">Old vs new (ARIMA, Ensemble)</button><button class="pill" onclick="selPreset('classical')">Classical models</button><button class="pill" onclick="selPreset('ml')">Machine and deep learning</button><button class="pill" onclick="selPreset('all')">All</button><button class="pill" onclick="selPreset('none')">Clear</button></div>
+<div class="chips" id="chips" style="margin-bottom:8px"></div><canvas id="line" height="360"></canvas></div>
+
+<h2 id="why">3. Why the new models are better</h2><p class="sub">Two things made the difference: knowing how the day ended, and knowing the weather forecast. The charts below remove one kind of information at a time from the final model.</p>
+<div class="grid c2" style="margin-top:14px"><div class="card"><h3>What the final model looks at</h3><canvas id="shap" height="400"></canvas><p class="note">lpm_last and lpm_eve are last-hour and evening PM2.5 of the day before; fc_ means a weather-forecast input.</p></div>
+<div class="card"><h3>Which kind of information matters (%)</h3><canvas id="grp" height="170"></canvas><h3 style="margin-top:14px">What happens if we remove information (error, tomorrow)</h3><canvas id="abl" height="230"></canvas><h3 style="margin-top:10px">Same, for the next 7 days</h3><canvas id="abl7" height="230"></canvas>
+<p class="note">Without the evening values, or without the weather forecast, the error grows. A forecast is used only if it was issued before the day it is used for, so nothing from the future leaks in; forecasts get less accurate further ahead (wind: 0.90 correlation at 1 day, 0.64 at 7). The last bar adds the real weather of the target day: an upper limit, not a real model.</p></div></div>
+<h3 style="margin:18px 0 8px">Why was Milestone 2 not accurate?</h3><div class="card m2 scroll"><table id="m2t"></table></div>
+
+<h2 id="details">More details</h2><p class="sub">Open any item.</p>
+<details class="sec"><summary>Error over time<span class="hint">is the model good in every season?</span></summary><div class="body"><canvas id="err" height="260"></canvas><p class="note">Rolling 14-day average error across the four test periods (Oct 2025 to Oct 2026). Errors are largest in the Nov to Jan smog season for every model; the ensemble is below ARIMA in most weeks, with late May to early June as the exception.</p></div></details>
+<details class="sec"><summary>Results in each season<span class="hint">typical error by test period</span></summary><div class="body"><p class="note">Typical error (RMSE, µg/m³) in each 90-day test period. Darker cell = larger error; outlined = best in that period.</p><div class="grid c2"><div><h3>Tomorrow</h3><div class="scroll"><table id="f1"></table></div></div><div><h3>Next 7 days</h3><div class="scroll"><table id="f7"></table></div></div></div></div></details>
+<details class="sec"><summary>Error by days ahead<span class="hint">how forecasts get worse further out</span></summary><div class="body"><canvas id="hz" height="300"></canvas><p class="note">Typical error (RMSE) for forecasts 1 to 7 days ahead, four seasons pooled.</p></div></details>
+<details class="sec"><summary>Alerts and extreme days<span class="hint">can it warn about bad days?</span></summary><div class="body"><div class="grid c2"><div><h3>Warning quality, tomorrow (F1 score, 0 to 1)</h3><div class="scroll"><table id="exc"></table></div><p class="note">Columns: days above 60, 90 and 120 µg/m³. Higher is better.</p></div><div><h3>Average miss by pollution level (µg/m³)</h3><div class="scroll"><table id="lev"></table></div><p class="note">Negative (red) = the forecast was too low. All models under-predict the extreme days above 120 µg/m³.</p></div></div></div></details>
+<details class="sec"><summary>Is the improvement real?<span class="hint">significance tests</span></summary><div class="body"><div class="scroll"><table id="dm"></table></div><p class="note">Diebold-Mariano test, four seasons pooled. p below 0.05 means the difference is very unlikely to be luck. A negative number means the model is better than the one it is compared with. Green = significantly better.</p></div></details>
+<details class="sec"><summary>How the study was done<span class="hint">data, method and limits</span></summary><div class="body"><ul style="margin:0;padding-left:18px">
+<li><b>Data:</b> Open-Meteo / CAMS air quality and ERA5 weather, hourly, one grid cell in central Delhi (28.60N 77.20E), combined into <span id="rows"></span> days, plus archived ECMWF weather forecasts (from March 2024; earlier training days use actual weather as a stand-in; every test day uses real forecasts).</li>
+<li><b>Two forecasts:</b> "tomorrow" uses everything up to the previous day; "next 7 days" is issued every 7 days for days 1 to 7. Scores use the original µg/m³ scale.</li>
+<li><b>No look-ahead:</b> a forecast for day t made h days ahead uses only the weather forecast issued h days before t.</li>
+<li><b>Fair testing:</b> four 90-day test periods, one per season, with the training window growing each time; settings were chosen only on data before the first test period. The last test period is exactly the Milestone 2 window.</li>
+<li><b>Ensemble</b> is the average of XGBoost, LightGBM, Random Forest, LSTM and GRU, fixed in advance.</li>
+<li><b>Limits:</b> modelled grid values rather than station readings, one city, one weather model, each season covered once, extreme days under-predicted.</li></ul></div></details>
+<details class="sec" id="words"><summary>Words explained<span class="hint">a short glossary</span></summary><div class="body"><dl class="gloss">
+<dt>PM2.5</dt><dd>Tiny dust particles in the air (under 2.5 micrometres). India's daily limit is 60 µg/m³ (micrograms per cubic metre).</dd>
+<dt>Forecast: tomorrow / next 7 days</dt><dd>The model predicts the daily average PM2.5 of tomorrow, or of each of the next 7 days.</dd>
+<dt>Test period</dt><dd>Days the models never saw while learning, used only to score them. We use four of 90 days each (one per season); the last is the same test as Milestone 2.</dd>
+<dt>RMSE</dt><dd>Typical size of the forecast error, in µg/m³. Lower is better. Big misses count more.</dd>
+<dt>MAE</dt><dd>Average size of the error, in µg/m³. Lower is better.</dd>
+<dt>MAPE</dt><dd>Error as a percentage of the real value. Lower is better.</dd>
+<dt>R² (fit)</dt><dd>How much of the ups and downs the forecast captures. 1 is perfect, 0 is no better than the average.</dd>
+<dt>Right category</dt><dd>Share of days where the forecast names the right pollution level (Good, Satisfactory, Moderate, Poor, Very poor, Severe).</dd>
+<dt>ARIMA, SARIMA, Naive</dt><dd>Classical models from Milestone 2. "Naive" simply repeats yesterday's value.</dd>
+<dt>XGBoost, LightGBM, Random Forest, Ridge</dt><dd>Machine-learning models that learn rules from many inputs.</dd>
+<dt>LSTM, GRU</dt><dd>Deep-learning models that read the last few weeks as a sequence.</dd>
+<dt>Prophet</dt><dd>A trend-and-season model from Meta.</dd>
+<dt>Ensemble</dt><dd>The average of several models; usually steadier than any single one.</dd>
+<dt>Weather forecast input</dt><dd>The weather forecast for the target day, issued days earlier, used as an extra input.</dd>
+<dt>SHAP</dt><dd>A way to show which inputs a model relied on most.</dd>
+<dt>Significance test</dt><dd>Checks whether a difference between two models is real or could be luck.</dd></dl></div></details>
+
+<h2 id="team">Team</h2><p class="sub">Team leader: Mahak Soni. Faculty: Anurag Choubey.</p>
+<div class="grid c2" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+<div class="card" style="border-top:4px solid var(--teal)"><h3 style="font-size:16px;margin-bottom:2px">Mahak Soni</h3><div class="note" style="margin-bottom:8px">S24CSEU2741 &nbsp;|&nbsp; <b style="color:var(--teal)">Team Leader</b></div><ul style="margin:0;padding-left:18px"><li>Project lead and final submission</li><li>Data pipeline: hourly to daily, intraday features</li><li>Classical recap: Naive, ARIMA, SARIMA, Holt-Winters</li><li>Tree models and hyper-parameter tuning</li><li>IEEE report, all sections</li></ul></div>
+<div class="card" style="border-top:4px solid var(--orange)"><h3 style="font-size:16px;margin-bottom:2px">Darsh Jasoria</h3><div class="note" style="margin-bottom:8px">S24CSEU0844 &nbsp;|&nbsp; Team member</div><ul style="margin:0;padding-left:18px"><li>Weather-forecast download and issue-time checks</li><li>Prophet, LSTM and GRU</li><li>Ensemble, SHAP, ablation, significance tests</li><li>Website, slides, GitHub and Vercel setup</li><li>Milestone 2 review and viva Q&amp;A</li></ul></div>
+<div class="card" style="border-top:4px solid var(--navy)"><h3 style="font-size:16px;margin-bottom:2px">Palak Aitwani</h3><div class="note" style="margin-bottom:8px">S24CSEU0326 &nbsp;|&nbsp; Team member</div><div style="font-size:34px;font-weight:700;color:var(--mut);margin-top:14px">GFG</div></div></div>
+<footer style="margin-top:28px;padding-top:14px;border-top:1px solid var(--line);color:var(--mut);font-size:12.5px">
+<p style="margin:0 0 6px"><b>Downloads:</b> <a href="Mahak%20Soni_S24CSEU2741_Milestone3_Report.docx">Report (.docx)</a> &nbsp;|&nbsp; <a href="Mahak%20Soni_S24CSEU2741_Milestone3.pptx">Slides (.pptx)</a> &nbsp;|&nbsp; <a href="HOW_TO_RUN.txt">How to run (.txt)</a></p>
+<p style="margin:0 0 6px"><b>Dataset (hourly, 1 Aug 2022 to 20 Oct 2026):</b> <a href="https://air-quality-api.open-meteo.com/v1/air-quality?latitude=28.60&amp;longitude=77.20&amp;start_date=2022-08-01&amp;end_date=2026-10-20&amp;hourly=pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,carbon_dioxide,us_aqi&amp;timezone=Asia%2FKolkata&amp;format=csv">download the air-quality data (CSV)</a></p>
+<p style="margin:0 0 6px"><b>Data sources:</b> air quality from the Open-Meteo Air Quality API (CAMS, Copernicus Atmosphere Monitoring Service); weather from the Open-Meteo Historical Weather API (ERA5); forecasts from the Open-Meteo Previous Runs API (ECMWF IFS). Open-Meteo.com, licence CC BY 4.0.</p>
+<p style="margin:0">Time Series Analysis (CSET 369), Bennett University &nbsp;|&nbsp; Mahak Soni, Darsh Jasoria, Palak Aitwani &nbsp;|&nbsp; Faculty: Anurag Choubey</p></footer>
+<a class="fab" href="#top" title="Back to top" aria-label="Back to top">&#8593;</a></div><div class="tip" id="tip"></div>
+<script>
+window.addEventListener('error',function(){var j=document.getElementById('jsfail');if(j)j.style.display='block'});
+const D=/*__DATA__*/null;
+const COL={Naive:"#9aa5a8",ARIMA:"#5b7075",SARIMA:"#8fa3a6","Holt-Winters":"#b8c2c4",Ridge:"#d9a441","Random Forest":"#8b6b3e",XGBoost:"#c4801a",LightGBM:"#d1503f",Prophet:"#7a5c9e",LSTM:"#27476e",GRU:"#3c78b4",Ensemble:"#1f8a7d"};
+const KIND={Naive:"Classical",ARIMA:"Classical",SARIMA:"Classical","Holt-Winters":"Classical",Ridge:"ML","Random Forest":"ML",XGBoost:"ML",LightGBM:"ML",Prophet:"ML",LSTM:"Deep",GRU:"Deep",Ensemble:"Combined"};
+const KC={Classical:"#5b7075",ML:"#c4801a",Deep:"#27476e",Combined:"#1f8a7d"};
+const MAIN=Object.keys(COL),HIGHER={R2:1,CatAcc:1},LAB={RMSE:"RMSE (µg/m³)",MAE:"MAE (µg/m³)",MAPE:"MAPE (%)",R2:"R²",CatAcc:"Category accuracy (%)"};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id),f2=(x,d=2)=>Number(x).toFixed(d);
+document.getElementById("span").textContent=D.start+" to "+D.end;$("rows").textContent=D.rows.toLocaleString();
+function setup(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1,h=+(c.dataset.h||(c.dataset.h=c.getAttribute("height")));c.width=r.width*dpr;c.height=h*dpr;c.style.height=h+"px";const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,h);return{g,w:r.width,h}}
+function seg(id,cb){const el=$(id);el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...el.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.v)})}
+const S={set:"hold",hor:"h1",met:"RMSE",fh:"1",ff:"all",sel:new Set(["ARIMA","Ensemble"]),all:false};
+const KEY=["Naive","ARIMA","XGBoost","LightGBM","GRU","Ensemble"];
+const val=(set,m,hor,met)=>D[set][m][hor+"_"+met];
+/* ---------------- KPI */
+function kpi(){const H=D.hold,R=D.roll,imp=(a,b)=>(1-a/b)*100;const K=[
+[`−${f2(imp(H.Ensemble.h1_RMSE,H.ARIMA.h1_RMSE),0)}%`,"Error in tomorrow's forecast",`${f2(H.ARIMA.h1_RMSE)} → ${f2(H.Ensemble.h1_RMSE)} µg/m³ on the Milestone 2 test window`,"var(--teal)"],
+[`−${f2(imp(R.Ensemble.h1_RMSE,R.ARIMA.h1_RMSE),0)}%`,"Tomorrow's forecast, all four seasons",`${f2(R.ARIMA.h1_RMSE)} → ${f2(R.Ensemble.h1_RMSE)} µg/m³; very unlikely to be luck (p < 0.001)`,"var(--navy)"],
+[`−${f2(imp(R.Ensemble.h7_RMSE,R.ARIMA.h7_RMSE),0)}%`,"Next-7-days forecast, all four seasons",`${f2(R.ARIMA.h7_RMSE,1)} → ${f2(R.Ensemble.h7_RMSE,1)} µg/m³; weather forecasts made the difference`,"var(--orange)"],
+[`${f2(R.ARIMA.h1_CatAcc,0)}% → ${f2(R.Ensemble.h1_CatAcc,0)}%`,"Days with the right pollution level","Good, Satisfactory, Moderate, Poor, Very poor or Severe","var(--purple)"]];
+$("s1").textContent=f2(imp(R.Ensemble.h1_RMSE,R.ARIMA.h1_RMSE),0);$("s2").textContent=f2(imp(R.Ensemble.h7_RMSE,R.ARIMA.h7_RMSE),0);$("s3").textContent=f2(R.Ensemble.h1_CatAcc,0);$("s4").textContent=f2(R.ARIMA.h1_CatAcc,0);
+$("kpi").innerHTML=K.map(k=>`<div class="card kpi" style="border-top:4px solid ${k[3]}"><div class="v" style="color:${k[3]}">${k[0]}</div><div class="l">${k[1]}</div><div class="s">${k[2]}</div></div>`).join("")}
+/* ---------------- comparison */
+function compare(){const{set,hor,met}=S;const LIST=S.all?MAIN:KEY,rows=LIST.map(m=>({m,v:val(set,m,hor,met)}));rows.sort((a,b)=>HIGHER[met]?b.v-a.v:a.v-b.v);
+const {g,w,h}=setup($("bar"));const L=130,Rr=60,T=8,rh=Math.min((h-T-24)/rows.length,40),mx=Math.max(...rows.map(r=>r.v))*1.08,mn=HIGHER[met]&&met==="R2"?Math.min(0,...rows.map(r=>r.v)):0;
+g.font="12px sans-serif";g.textBaseline="middle";const X=v=>L+(v-mn)/(mx-mn)*(w-L-Rr);
+rows.forEach((r,i)=>{const y=T+i*rh;g.fillStyle=css("--ink");g.textAlign="right";g.fillText(r.m,L-8,y+rh/2);g.fillStyle=KC[KIND[r.m]];const x0=X(Math.max(mn,Math.min(0,r.v))),x1=X(Math.max(r.v,0));g.fillRect(Math.min(x0,x1),y+rh*.18,Math.abs(x1-x0)||1,rh*.64);g.fillStyle=css("--ink");g.textAlign="left";g.fillText(f2(r.v,met==="R2"?2:met==="CatAcc"||met==="MAPE"?1:2),Math.max(x1,x0)+6,y+rh/2)});
+let lx=L;g.textBaseline="middle";Object.entries(KC).forEach(([k,c])=>{g.fillStyle=c;g.fillRect(lx,h-14,10,10);g.fillStyle=css("--mut");g.textAlign="left";g.fillText(k,lx+14,h-8);lx+=g.measureText(k).width+36});
+const keys=["RMSE","MAE","MAPE","R2","CatAcc"];let best={};keys.forEach(k=>{const vs=LIST.map(m=>val(set,m,hor,k));best[k]=HIGHER[k]?Math.max(...vs):Math.min(...vs)});
+let html="<tr><th>Model</th>"+keys.map(k=>`<th data-k="${k}">${k==="CatAcc"?"Cat. %":k==="R2"?"R²":k}</th>`).join("")+"</tr>";
+rows.forEach(r=>{html+=`<tr class="${r.v===best[met]?"best":""}"><td>${r.m}<span class="tag" style="background:${KC[KIND[r.m]]}">${KIND[r.m]}</span></td>`+keys.map(k=>{const v=val(set,r.m,hor,k);return `<td class="${v===best[k]?"b":""}">${f2(v,k==="MAPE"||k==="CatAcc"?1:2)}</td>`}).join("")+"</tr>"});
+$("tbl").innerHTML=html;$("tbl").querySelectorAll("th[data-k]").forEach(t=>t.onclick=()=>{S.met=t.dataset.k;[...$("sMet").children].forEach(b=>b.classList.toggle("on",b.dataset.v===S.met));compare()});
+const top=rows[0],a=val(set,"ARIMA",hor,met),unit={RMSE:" µg/m³",MAE:" µg/m³",MAPE:"%",R2:"",CatAcc:"%"}[met],nm={RMSE:"typical error",MAE:"average error",MAPE:"percentage error",R2:"fit (R²)",CatAcc:"share of days with the right pollution level"}[met],dp=met==="R2"?2:met==="CatAcc"||met==="MAPE"?1:2;
+$("plain").innerHTML=HIGHER[met]?`<b>${top.m}</b> is best: ${nm} ${f2(top.v,dp)}${unit}. The Milestone 2 model (ARIMA) scored ${f2(a,dp)}${unit}. Higher is better here.`:(top.m==="ARIMA"?`<b>ARIMA</b> is best on this view.`:`<b>${top.m}</b> is best: ${nm} ${f2(top.v,dp)}${unit}. The Milestone 2 model (ARIMA) had ${f2(a,dp)}${unit}, so the best model's error is <b>${f2((1-top.v/a)*100,0)}% lower</b>. Lower is better.`);
+$("cmpNote").textContent=`Test period: ${set==="hold"?"23 Jul to 20 Oct 2026 (the Milestone 2 window)":"26 Oct 2025 to 20 Oct 2026 (four seasons)"}. Showing ${S.all?"all 12 models":"6 key models"}.`}
+seg("sSet",v=>{S.set=v;compare()});seg("sMod",v=>{S.all=v==="all";compare()});seg("sHor",v=>{S.hor=v;compare()});seg("sMet",v=>{S.met=v;compare()});
+/* ---------------- line chart helper */
+const T0=s=>Date.parse(s+"T00:00:00Z");
+function lineChart(cv,xs,series,opt={}){const{g,w,h}=setup(cv);const L=48,R=14,T=opt.legend?30:10,B=44;const t=xs.map(T0);const x0=Math.min(...t),x1=Math.max(...t);let mn=(opt.min==null?Infinity:opt.min),mx=-Infinity;series.forEach(s=>s.y.forEach(v=>{if(v!=null&&isFinite(v)){mn=Math.min(mn,v);mx=Math.max(mx,v)}}));const rg=mx-(opt.min==null?mn:opt.min),stp=rg>150?50:rg>60?20:10;mn=(opt.min==null?Math.floor(mn/stp)*stp:opt.min);mx=Math.ceil(mx/stp)*stp;
+const X=v=>L+(v-x0)/(x1-x0||1)*(w-L-R),Y=v=>T+(1-(v-mn)/(mx-mn))*(h-T-B);g.font="11px sans-serif";g.strokeStyle=css("--line");g.fillStyle=css("--mut");g.lineWidth=1;g.textAlign="right";g.textBaseline="middle";
+for(let v=mn;v<=mx+1e-9;v+=stp){const y=Y(v);g.beginPath();g.moveTo(L,y);g.lineTo(w-R,y);g.stroke();g.fillText(Math.round(v),L-6,y)}
+const span=(x1-x0)/864e5,step=span>200?30:span>90?14:span>40?7:span>20?3:1;g.textAlign="center";g.textBaseline="top";let last=-1e9;const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+for(let d=0;d<=span;d+=step){const tt=x0+d*864e5,dt=new Date(tt),lab=span>200?mo[dt.getUTCMonth()]+" "+String(dt.getUTCFullYear()).slice(2):dt.getUTCDate()+" "+mo[dt.getUTCMonth()];const x=X(tt);if(x-last>(span>200?46:52)){g.save();g.translate(x,h-B+8);g.rotate(-0.5);g.textAlign="right";g.fillText(lab,0,0);g.restore();g.beginPath();g.moveTo(x,h-B);g.lineTo(x,h-B+4);g.stroke();last=x}}
+g.save();g.translate(12,(h-B+T)/2);g.rotate(-Math.PI/2);g.textAlign="center";g.fillText(opt.ylab||"",0,0);g.restore();g.textAlign="left";g.fillText("Date",w/2,h-12);
+if(opt.shade)opt.shade.forEach(([a,b,c])=>{g.fillStyle=c;g.fillRect(X(T0(a)),T,X(T0(b))-X(T0(a)),h-T-B)});
+if(opt.ref!=null){g.strokeStyle=css("--red");g.setLineDash([5,4]);g.beginPath();g.moveTo(L,Y(opt.ref));g.lineTo(w-R,Y(opt.ref));g.stroke();g.setLineDash([])}
+series.forEach(s=>{g.strokeStyle=s.c;g.lineWidth=s.lw||1.5;g.beginPath();let st=false;s.y.forEach((v,i)=>{if(v==null||!isFinite(v)){st=false;return}const x=X(t[i]),y=Y(v);st?g.lineTo(x,y):g.moveTo(x,y);st=true});g.stroke()});
+if(opt.legend){let lx=L+4;g.font="11.5px sans-serif";g.textAlign="left";g.textBaseline="middle";series.forEach(s=>{g.fillStyle=s.c;g.fillRect(lx,6,12,4);g.fillStyle=css("--ink");g.fillText(s.n,lx+17,8);lx+=g.measureText(s.n).width+36})}
+cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),mx_=e.clientX-r.left;if(mx_<L||mx_>w-R){$("tip").style.display="none";return}const tt=x0+(mx_-L)/(w-L-R)*(x1-x0);let bi=0,bd=1e18;t.forEach((v,i)=>{const d=Math.abs(v-tt);if(d<bd){bd=d;bi=i}});
+$("tip").innerHTML=`<b>${xs[bi]}</b><br>`+series.map(s=>`<span style="color:${s.c}">●</span> ${s.n}: ${s.y[bi]==null?"–":f2(s.y[bi],1)}`).join("<br>");$("tip").style.display="block";$("tip").style.left=Math.min(e.clientX+14,innerWidth-190)+"px";$("tip").style.top=(e.clientY+14)+"px"};cv.onmouseleave=()=>$("tip").style.display="none"}
+/* ---------------- forecast explorer */
+function chips(){$("chips").innerHTML=["Actual",...MAIN].map(m=>`<span class="chip ${m==="Actual"||S.sel.has(m)?"":"off"}" data-m="${m}"><i style="background:${m==="Actual"?"#000":COL[m]}"></i>${m}</span>`).join("");
+$("chips").onclick=e=>{const c=e.target.closest(".chip");if(!c||c.dataset.m==="Actual")return;const m=c.dataset.m;S.sel.has(m)?S.sel.delete(m):S.sel.add(m);chips();forecast()}}
+function forecast(){const P=D.preds[S.fh];let idx=P.dates.map((_,i)=>i).filter(i=>S.ff==="all"||P.fold[i]==+S.ff);const xs=idx.map(i=>P.dates[i]);
+const series=[{n:"Actual",c:css("--ink"),lw:2,y:idx.map(i=>P.actual[i])},...MAIN.filter(m=>S.sel.has(m)).map(m=>({n:m,c:COL[m],lw:m==="Ensemble"?2:1.3,y:idx.map(i=>P[m][i])}))];
+const shade=S.ff==="all"?Object.entries(D.folds).map(([f,[a,b]])=>[a,b,f%2?"rgba(120,140,145,.07)":"rgba(120,140,145,.15)"]):[];
+lineChart($("line"),xs,series,{ylab:"PM2.5 (µg/m³)",ref:60,shade})}
+function foldSeg(){$("fFold").innerHTML='<button data-v="all" class="on">All four seasons</button>'+[1,2,3,4].map(f=>`<button data-v="${f}" title="${D.folds[f][0]} to ${D.folds[f][1]}">${["Oct-Jan (smog)","Jan-Apr","Apr-Jul","Jul-Oct (M2 window)"][f-1]}</button>`).join("");seg("fFold",v=>{S.ff=v;forecast()})}
+seg("fHor",v=>{S.fh=v;forecast()});
+/* ---------------- error over time */
+function errTime(){const P=D.preds["1"],n=P.dates.length,W=14;const mae=m=>P.actual.map((a,i)=>i<W-1?null:P.actual.slice(i-W+1,i+1).reduce((s,x,j)=>s+Math.abs(x-P[m][i-W+1+j]),0)/W);
+lineChart($("err"),P.dates,["Naive","ARIMA","Random Forest","GRU","Ensemble"].map(m=>({n:m,c:COL[m],lw:m==="Ensemble"?2.2:1.3,y:mae(m)})),{ylab:"14-day rolling MAE (µg/m³)",min:0,legend:true,shade:Object.entries(D.folds).map(([f,[a,b]])=>[a,b,f%2?"rgba(120,140,145,.07)":"rgba(120,140,145,.15)"])})}
+/* ---------------- fold heat tables */
+function heat(id,T){const ms=MAIN,all=ms.flatMap(m=>[1,2,3,4].map(f=>T[m][f]));let h="<tr><th>Model</th>"+[1,2,3,4].map(f=>`<th style="cursor:default">Fold ${f}<br><span style="font-weight:400">${D.folds[f][0].slice(2,7)} to ${D.folds[f][1].slice(2,7)}</span></th>`).join("")+"</tr>";
+ms.forEach(m=>{h+=`<tr><td>${m}</td>`+[1,2,3,4].map(f=>{const v=T[m][f],mn=Math.min(...ms.map(x=>T[x][f])),k=(v-Math.min(...all))/(Math.max(...all)-Math.min(...all));return `<td style="background:rgba(209,80,63,${(.08+.5*k).toFixed(2)});${v===mn?"font-weight:700;outline:2px solid var(--teal);outline-offset:-2px":""}">${f2(v)}</td>`}).join("")+"</tr>"});$(id).innerHTML=h}
+/* ---------------- horizon */
+function horizon(){const da=D.dayahead,xs=da.day_ahead;const {g,w,h}=setup($("hz"));const L=48,R=14,T=44,B=36;const ms=Object.keys(da).filter(k=>k!=="day_ahead");let mx=0;ms.forEach(m=>da[m].forEach(v=>mx=Math.max(mx,v)));mx=Math.ceil(mx/10)*10;const X=i=>L+i/(xs.length-1)*(w-L-R),Y=v=>T+(1-v/mx)*(h-T-B);
+g.font="11px sans-serif";g.strokeStyle=css("--line");g.fillStyle=css("--mut");g.textAlign="right";g.textBaseline="middle";for(let i=0;i<=5;i++){const v=mx*i/5;g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.fillText(Math.round(v),L-6,Y(v))}
+g.textAlign="center";g.textBaseline="top";xs.forEach((d,i)=>g.fillText(d,X(i),h-B+6));g.fillText("Days ahead",(L+w-R)/2,h-16);
+ms.forEach(m=>{g.strokeStyle=COL[m];g.lineWidth=m==="Ensemble"?2.4:1.3;g.beginPath();da[m].forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));g.stroke()});let lx=L,ly=8;g.font="11.5px sans-serif";g.textAlign="left";g.textBaseline="middle";ms.forEach(m=>{const tw=g.measureText(m).width+34;if(lx+tw>w-10){lx=L;ly+=16}g.fillStyle=COL[m];g.fillRect(lx,ly,12,4);g.fillStyle=css("--ink");g.fillText(m,lx+17,ly+2);lx+=tw})}
+/* ---------------- bars helper */
+function hbars(id,items,color,fmt=v=>f2(v,3)){const{g,w,h}=setup($(id)),L=170,R=56,T=4,rh=(h-T)/items.length,mx=Math.max(...items.map(i=>i[1]))*1.05;g.font="12px sans-serif";g.textBaseline="middle";
+items.forEach((it,i)=>{const y=T+i*rh,x=L+it[1]/mx*(w-L-R);g.fillStyle=css("--ink");g.textAlign="right";g.fillText(it[0],L-8,y+rh/2);g.fillStyle=it[2]||color;g.fillRect(L,y+rh*.18,x-L,rh*.64);g.fillStyle=css("--ink");g.textAlign="left";g.fillText(fmt(it[1]),x+6,y+rh/2)})}
+function insights(){hbars("shap",D.shap.slice().reverse().map(r=>[r[0],r[1]]).reverse(),"#1f8a7d");hbars("grp",D.shapg.map(r=>[r[0],r[1]]),"#c4801a",v=>f2(v,1)+"%");
+const R=D.roll,mk=h=>[["Full feature set",R.XGBoost["h"+h+"_RMSE"],"#c4801a"],["Without weather forecast",R["XGBoost (no weather forecast)"]["h"+h+"_RMSE"],"#d1503f"],["Without any weather",R["XGBoost (air only)"]["h"+h+"_RMSE"],"#d1503f"],["Without intraday",R["XGBoost (no intraday)"]["h"+h+"_RMSE"],"#d1503f"],["History + season only",R["XGBoost (history only)"]["h"+h+"_RMSE"],"#d1503f"],["+ target-day weather (oracle)",R["XGBoost (+future weather, oracle)"]["h"+h+"_RMSE"],"#1f8a7d"],["Reference: ARIMA (M2)",R.ARIMA["h"+h+"_RMSE"],"#5b7075"]];
+hbars("abl",mk(1),"#c4801a",v=>f2(v,2));hbars("abl7",mk(7),"#c4801a",v=>f2(v,2));
+const th=[60,90,120],ms=["Naive","ARIMA","SARIMA","Ridge","Random Forest","XGBoost","LightGBM","Prophet","LSTM","GRU","Ensemble"];let h="<tr><th>Model</th>"+th.map(t=>`<th style="cursor:default">&gt;${t}</th>`).join("")+"</tr>";
+ms.forEach(m=>{h+=`<tr><td>${m}</td>`+th.map(t=>{const r=D.exc.find(e=>e.Model===m&&e.threshold===t),mxv=Math.max(...D.exc.filter(e=>e.threshold===t&&ms.includes(e.Model)).map(e=>e.F1));return `<td class="${r.F1===mxv?"b":""}">${f2(r.F1)}</td>`}).join("")+"</tr>"});$("exc").innerHTML=h;
+const lv=[...new Set(D.lev.map(r=>r.level))],lm=[...new Set(D.lev.map(r=>r.Model))];h="<tr><th>Model</th>"+lv.map(l=>`<th style="cursor:default">${l}</th>`).join("")+"</tr>";lm.forEach(m=>{h+=`<tr><td>${m}</td>`+lv.map(l=>{const r=D.lev.find(x=>x.Model===m&&x.level===l);return `<td class="${r.Bias<0?"neg":""}">${r.Bias>0?"+":""}${f2(r.Bias,1)}</td>`}).join("")+"</tr>"});$("lev").innerHTML=h;
+h="<tr><th>Model</th><th>vs Naive, next day</th><th>vs ARIMA, next day</th><th>vs Naive, week</th><th>vs ARIMA, week</th><th>vs SARIMA, week</th></tr>";["SARIMA","Ridge","Random Forest","XGBoost","LightGBM","Prophet","LSTM","GRU","Ensemble"].forEach(m=>{h+=`<tr><td>${m}</td>`+[[1,"Naive"],[1,"ARIMA"],[7,"Naive"],[7,"ARIMA"],[7,"SARIMA"]].map(([hh,b])=>{const r=D.dm.find(x=>x.Model===m&&x.vs===b&&x.horizon===hh);if(!r)return "<td>–</td>";return `<td class="${r.p_value<.05?(r.DM_stat<0?"pos":"neg"):""}">${f2(r.DM_stat,2)} (p=${r.p_value<.001?"&lt;0.001":f2(r.p_value,3)})</td>`}).join("")+"</tr>"});$("dm").innerHTML=h}
+/* ---------------- M2 review table */
+function m2(){const R=D.roll,rows=[
+["Univariate input","Models saw one daily mean per day. M2 slides found CO r ≈ 0.69 and NO₂ r = 0.56 with PM2.5 but never fed them in.","XGBoost with history only: RMSE "+f2(R["XGBoost (history only)"].h1_RMSE)+" (ARIMA "+f2(R.ARIMA.h1_RMSE)+"). Model power was not the limit; information was.","Added co-pollutants, observed weather and archived weather forecasts: 79 features."],
+["Daily mean hides the state","A daily mean cannot tell if the day ended clean or smoggy. Delhi swings from ~52 to ~91 µg/m³ within a day.","Top SHAP features are last-hour and evening PM2.5; removing intraday features: RMSE "+f2(R["XGBoost (no intraday)"].h1_RMSE)+" vs "+f2(R.XGBoost.h1_RMSE)+".","Intraday statistics from the hourly data."],
+["No weather forecast","The week-ahead range depends on wind and mixing, which no pollution history can predict.","XGBoost week-ahead RMSE "+f2(R["XGBoost (no weather forecast)"].h7_RMSE)+" without forecasts, "+f2(R.XGBoost.h7_RMSE)+" with them; Ensemble "+f2(R.Ensemble.h7_RMSE)+" vs ARIMA "+f2(R.ARIMA.h7_RMSE)+".","Archived ECMWF forecasts, used only if issued before the forecast origin."],
+["Weekly terms with no weekly signal","SARIMA(…)(1,0,1)₇ and Holt-Winters m = 7 were used although lag-7 autocorrelation is ≈ 0 and M2's own STL showed a weak weekly cycle. Holt-Winters failed Ljung-Box (p ≈ 0).","SARIMA ≈ ARIMA in M2 (15.14 vs 14.95); Holt-Winters worst (17.52).","Dropped weekly seasonality from the learners; yearly terms kept."],
+["Data artefact and wording","First 4 daily values were one back-filled constant (43.6 µg/m³); slide called the data 'gap-free' while the first 77 hours and 817 CO₂ days were missing.","Visible in the M2 daily file, rows 1 to 4.","Removed; series starts 5 Aug 2022 (1,538 days); gaps stated."],
+["One test window","A single 90-day Jul to Oct window, the easiest season. Winter errors are about twice as large.","Fold RMSE of the ensemble: "+[1,2,3,4].map(f=>f2(D.fold1.Ensemble[f],1)).join(", ")+" (folds 1 to 4).","Four rolling folds, one per season, plus Diebold-Mariano tests."],
+["No linkage to decisions","Only RMSE/MAPE; no check that the right alert category is predicted.","Category accuracy "+f2(R.ARIMA.h1_CatAcc,0)+"% for ARIMA, "+f2(R.Ensemble.h1_CatAcc,0)+"% for the ensemble.","Category accuracy, exceedance F1 and extreme-tail bias reported."]];
+$("m2t").innerHTML="<tr><th style='text-align:left'>Issue in Milestone 2</th><th style='text-align:left'>What was wrong</th><th style='text-align:left'>Evidence</th><th style='text-align:left'>Fix in Milestone 3</th></tr>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td style="text-align:left;vertical-align:top;${i===0?"font-weight:700;white-space:nowrap":""}">${c}</td>`).join("")+"</tr>").join("")}
+function all(){kpi();compare();forecast();errTime();heat("f1",D.fold1);heat("f7",D.fold7);horizon();insights();m2()}
+function syncSeg(id,v){[...$(id).children].forEach(b=>b.classList.toggle("on",b.dataset.v===v))}
+function setView(set,hor,met){S.set=set;S.hor=hor;S.met=met;syncSeg("sSet",set);syncSeg("sHor",hor);syncSeg("sMet",met);compare();$("bar").scrollIntoView({block:"nearest"})}
+function selPreset(n){S.sel=new Set(n==="pair"?["ARIMA","Ensemble"]:n==="classical"?["Naive","ARIMA","SARIMA","Holt-Winters"]:n==="ml"?["Ridge","Random Forest","XGBoost","LightGBM","Prophet","LSTM","GRU","Ensemble"]:n==="all"?MAIN:[]);chips();forecast()}
+document.querySelectorAll("details.sec").forEach(d=>d.addEventListener("toggle",()=>{if(d.open)setTimeout(all,40)}));
+document.querySelectorAll("nav a").forEach(a=>a.addEventListener("click",()=>{const t=document.querySelector(a.getAttribute("href")),d=t&&t.closest("details");if(d&&!d.open)d.open=true}));
+chips();foldSeg();all();matchMedia('(prefers-color-scheme: dark)').addEventListener&&matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(all,50));let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(all,150)});
+</script></body></html>

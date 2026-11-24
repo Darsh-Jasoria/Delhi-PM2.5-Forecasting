@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# macOS / editors
+.DS_Store
+# Vercel
+.vercel/
+# Large re-creatable caches (python code/milestone3_analysis.py rebuilds them in about 6 minutes)
+results/cache/
+results/baseline_no_forecast/cache/
+results_fast/

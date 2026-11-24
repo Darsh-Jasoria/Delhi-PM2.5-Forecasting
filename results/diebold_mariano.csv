@@ -1,0 +1,67 @@
+horizon,Model,vs,DM_stat,p_value
+1,Naive,ARIMA,1.59,0.1134
+1,Naive,SARIMA,2.31,0.0216
+1,ARIMA,Naive,-1.59,0.1134
+1,ARIMA,SARIMA,1.89,0.06
+1,SARIMA,Naive,-2.31,0.0216
+1,SARIMA,ARIMA,-1.89,0.06
+1,Holt-Winters,Naive,-0.12,0.9045
+1,Holt-Winters,ARIMA,1.39,0.1646
+1,Holt-Winters,SARIMA,2.06,0.0404
+1,Ridge,Naive,-3.83,0.0002
+1,Ridge,ARIMA,-4.3,0.0
+1,Ridge,SARIMA,-4.03,0.0001
+1,Random Forest,Naive,-3.61,0.0003
+1,Random Forest,ARIMA,-4.3,0.0
+1,Random Forest,SARIMA,-3.6,0.0004
+1,XGBoost,Naive,-3.86,0.0001
+1,XGBoost,ARIMA,-4.71,0.0
+1,XGBoost,SARIMA,-3.96,0.0001
+1,LightGBM,Naive,-4.09,0.0001
+1,LightGBM,ARIMA,-4.61,0.0
+1,LightGBM,SARIMA,-4.22,0.0
+1,Prophet,Naive,-2.66,0.0081
+1,Prophet,ARIMA,-1.71,0.0873
+1,Prophet,SARIMA,-1.21,0.2275
+1,LSTM,Naive,-4.02,0.0001
+1,LSTM,ARIMA,-4.12,0.0
+1,LSTM,SARIMA,-4.13,0.0
+1,GRU,Naive,-4.42,0.0
+1,GRU,ARIMA,-4.6,0.0
+1,GRU,SARIMA,-4.71,0.0
+1,Ensemble,Naive,-4.63,0.0
+1,Ensemble,ARIMA,-5.75,0.0
+1,Ensemble,SARIMA,-5.59,0.0
+7,Naive,ARIMA,2.62,0.0091
+7,Naive,SARIMA,2.71,0.0071
+7,ARIMA,Naive,-2.62,0.0091
+7,ARIMA,SARIMA,1.79,0.0745
+7,SARIMA,Naive,-2.71,0.0071
+7,SARIMA,ARIMA,-1.79,0.0745
+7,Holt-Winters,Naive,-0.19,0.8516
+7,Holt-Winters,ARIMA,2.85,0.0046
+7,Holt-Winters,SARIMA,2.93,0.0036
+7,Ridge,Naive,-2.59,0.01
+7,Ridge,ARIMA,-1.11,0.268
+7,Ridge,SARIMA,-0.08,0.9365
+7,Random Forest,Naive,-2.91,0.0038
+7,Random Forest,ARIMA,-2.26,0.0242
+7,Random Forest,SARIMA,-1.88,0.0612
+7,XGBoost,Naive,-2.72,0.0069
+7,XGBoost,ARIMA,-1.53,0.1268
+7,XGBoost,SARIMA,-0.64,0.5202
+7,LightGBM,Naive,-2.94,0.0035
+7,LightGBM,ARIMA,-2.34,0.0198
+7,LightGBM,SARIMA,-2.29,0.0227
+7,Prophet,Naive,-1.13,0.258
+7,Prophet,ARIMA,2.55,0.0112
+7,Prophet,SARIMA,3.23,0.0014
+7,LSTM,Naive,-3.19,0.0016
+7,LSTM,ARIMA,-2.57,0.0107
+7,LSTM,SARIMA,-2.07,0.0389
+7,GRU,Naive,-3.05,0.0025
+7,GRU,ARIMA,-2.56,0.0108
+7,GRU,SARIMA,-2.57,0.0107
+7,Ensemble,Naive,-3.17,0.0017
+7,Ensemble,ARIMA,-2.97,0.0031
+7,Ensemble,SARIMA,-3.6,0.0004

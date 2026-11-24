@@ -1,0 +1,297 @@
+================================================================================
+ HOW TO SET UP AND START THIS PROJECT AND ITS DASHBOARD
+ Forecasting Delhi's PM2.5 with classical, machine-learning and deep-learning models
+ Time Series Analysis (CSET 369), Bennett University, Milestone 3 (final)
+ Team Leader: Mahak Soni (S24CSEU2741). Team: Darsh Jasoria (S24CSEU0844),
+ Palak Aitwani (S24CSEU0326)
+ Faculty: Anurag Choubey                                Last updated: 24 Nov 2026
+================================================================================
+
+This file is written for someone who has never seen the project. It also works
+as a briefing: if you paste it into ChatGPT (or any AI assistant) and ask a
+question, the assistant has everything it needs about the project, the folder,
+the commands and the results.
+
+--------------------------------------------------------------------------------
+1. WHAT THE PROJECT DOES (30-second version)
+--------------------------------------------------------------------------------
+Goal   : forecast Delhi's daily PM2.5 (fine-dust concentration, in micrograms per
+         cubic metre) for the next day and for the next 7 days.
+Data   : 4 years of hourly air quality (CAMS) and weather (ERA5), plus archived
+         weather FORECASTS (ECMWF), for one grid cell in central New Delhi,
+         5 Aug 2022 to 20 Oct 2026 (1,538 days).
+Models : old "classical" models (Naive, ARIMA, SARIMA, Holt-Winters) versus newer
+         machine-learning and deep-learning models (Ridge, Random Forest,
+         XGBoost, LightGBM, Prophet, LSTM, GRU) and an ensemble of them.
+Result : the newer models are clearly more accurate (numbers in section 7).
+Why    : Milestone 2 used only one daily average per day. Milestone 3 adds
+         intraday statistics (how the day ended), other pollutants, weather and
+         weather forecasts, and tests on four seasons instead of one window.
+
+TEAM AND CONTRIBUTIONS
+  Mahak Soni (S24CSEU2741), TEAM LEADER: project lead and final submission; data
+      pipeline and intraday features; classical recap (Naive, ARIMA, SARIMA,
+      Holt-Winters); tree models and tuning; the IEEE report.
+  Darsh Jasoria (S24CSEU0844): weather-forecast download and issue-time checks;
+      Prophet, LSTM and GRU; ensemble, SHAP, ablation, significance tests; website,
+      slides, GitHub and Vercel setup; Milestone 2 review and viva Q&A.
+  Palak Aitwani (S24CSEU0326): GFG.
+
+--------------------------------------------------------------------------------
+2. FASTEST WAY TO SEE THE RESULTS: OPEN THE DASHBOARD (no installation needed)
+--------------------------------------------------------------------------------
+1. Open the folder "Milestone3".
+2. Double-click the file "index.html" (it is at the top level of the folder).
+3. It opens in your normal web browser
+   (Chrome, Edge, Firefox or Safari). It works offline: no server, no internet,
+   no installation. If double-click opens a text editor instead, right-click the
+   file and choose "Open with" and then a web browser.
+
+What you will see (use the menu bar at the top; no technical knowledge needed):
+  Start here        the answer in 10 seconds, in plain English, with 4 headline numbers
+  1. Compare models  click a "Quick view" button, or choose the test period, tomorrow /
+                    next 7 days, and what to measure; the best model is named in a
+                    sentence and highlighted in the bars and table ("Key models" shows
+                    6 models, "All 12 models" shows everything)
+  2. See forecasts   real PM2.5 (black line) against any models on a calendar axis;
+                    use the "Models" buttons, pick a season, hover for exact values
+  3. Why it works    what weather forecasts add, what the model looks at, what happens
+                    when information is removed, and why Milestone 2 was not accurate
+  More details      click to open: error over time, results per season, error by days
+                    ahead, alerts and extreme days, significance tests, how the study
+                    was done
+  Words explained   a short glossary (RMSE, MAE, ARIMA, ensemble, and so on)
+  Team              who is on the team and what each did
+  Tip: every button has a tooltip; the round arrow at the bottom right returns to the top.
+
+--------------------------------------------------------------------------------
+3. RE-RUN THE WHOLE PROJECT ON YOUR COMPUTER (optional, about 6 minutes)
+--------------------------------------------------------------------------------
+You need: a recent Python 3 (the project was built and tested with Python 3.13) and
+about 3 GB of free disk space (most of it is the PyTorch package). Internet is
+needed only once, to install the packages. All data is already in the folder.
+
+Step 1  Open a terminal (macOS: Terminal; Windows: PowerShell or Command Prompt;
+        Linux: any terminal) and go to the project folder, for example:
+            cd path/to/Milestone3
+
+Step 2  Create an isolated Python environment (recommended) and activate it.
+        macOS / Linux:
+            python3 -m venv .venv
+            source .venv/bin/activate
+        Windows (PowerShell):
+            py -m venv .venv
+            .venv\Scripts\Activate.ps1
+
+Step 3  Install the packages (a few minutes; PyTorch is large):
+            pip install -r code/requirements.txt
+
+Step 4  Run the full analysis:
+            cd code
+            python milestone3_analysis.py
+
+        You will see progress lines with time stamps. It tunes the models,
+        trains four test folds, runs the LSTM/GRU in a separate process, then
+        writes tables to "results/" and figures to "results/figures/". The last line is
+        "ALL DONE". Running it again is fast because stages are cached in
+        "results/cache" (delete that folder to retrain from scratch).
+
+Step 5  (optional) Rebuild the dashboard, report and slides from the new results:
+            cd ..
+            python code/build/build_dashboard.py
+            python code/build/build_report.py
+            python code/build/build_ppt.py
+        Then open index.html again.
+
+Other commands (run inside the "code" folder):
+  python milestone3_analysis.py --fast      quick smoke test with smaller search
+                                            (writes results_fast/, not for reporting)
+  python m3_forecasts.py download ecmwf_ifs025
+                                            re-download the weather-forecast archive
+                                            (needs internet; the file is already in data/)
+
+--------------------------------------------------------------------------------
+4. FOLDER MAP (every file appears exactly once; four folders, five key files)
+--------------------------------------------------------------------------------
+Milestone3/
+  README.md               start here: overview, form answers, team, headline results
+  index.html              the website / interactive dashboard (double-click to open)
+  Mahak Soni_S24CSEU2741_Milestone3.pptx          final presentation (23 slides, speaker notes)
+  Mahak Soni_S24CSEU2741_Milestone3_Report.docx   final report (IEEE format)
+  HOW_TO_RUN.txt          this file
+  LICENSE, vercel.json, .vercelignore, .gitignore    must stay at the top level
+  code/
+      m3_data.py              loads the hourly data and builds the daily table
+      m3_forecasts.py         downloads the archived weather forecasts
+      milestone3_analysis.py  features, classical + tree models, Prophet, ensemble,
+                              metrics, significance tests, figures
+      milestone3_dl.py        LSTM and GRU (a separate script on purpose, see section 6)
+      requirements.txt        Python packages and versions
+      milestone2/             Milestone 2 code (for the form)
+      build/                  rebuilds the website, report and slides from results/
+  data/                   delhi_hourly_raw.csv (air quality = the dataset),
+                          delhi_weather_raw.csv (weather),
+                          forecasts_ecmwf_ifs025_daily.csv (forecast archive),
+                          delhi_daily_air_quality.csv (Milestone 2 daily file)
+  results/                final tables (model_comparison_*.csv, rmse_by_fold_*.csv,
+                          diebold_mariano.csv, shap_*.csv, predictions_all_folds.csv, ...)
+      figures/                the 11 figures used in the report
+  docs/                   Guidelines_Checklist.md, M2_Review_and_Corrections.md,
+                          Viva_QA.md
+      code_pdf/               the code as PDF, in case the form rejects .py files
+
+--------------------------------------------------------------------------------
+4b. MICROSOFT FORM: WHAT TO UPLOAD (field by field)
+--------------------------------------------------------------------------------
+  Project Title      (text)  Forecasting Delhi's PM2.5 with Classical, Machine-Learning
+                             and Deep-Learning Time Series Models
+  Dataset Link       (text)  https://air-quality-api.open-meteo.com/v1/air-quality?latitude=28.60&longitude=77.20&start_date=2022-08-01&end_date=2026-10-20&hourly=pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,carbon_dioxide,us_aqi&timezone=Asia%2FKolkata&format=csv
+                             (opens the dataset as a CSV: hourly Delhi air quality,
+                             1 Aug 2022 to 20 Oct 2026, 37,008 rows; identical to
+                             data/delhi_hourly_raw.csv. The data is recent: the last
+                             observation is about one month old.)
+  Milestone 2 code   (up to 5 files)  code/milestone2/milestone2_analysis.py
+                                      code/milestone2/milestone2_analysis.ipynb
+  Milestone 3 Report (1 document)     Mahak Soni_S24CSEU2741_Milestone3_Report.docx
+  Milestone 3 Code   (up to 5 files)  code/m3_data.py, code/m3_forecasts.py,
+                                      code/milestone3_analysis.py, code/milestone3_dl.py,
+                                      code/requirements.txt
+  Milestone 3 PPT    (1 file)         Mahak Soni_S24CSEU2741_Milestone3.pptx
+  If a code field refuses .py or .ipynb files, upload docs/code_pdf/Milestone2_code.pdf
+  and docs/code_pdf/Milestone3_code.pdf instead (one PDF in each field).
+  If the form allows one response per team, the team leader (Mahak Soni) submits.
+
+--------------------------------------------------------------------------------
+5. KEY FACTS (useful for viva questions and for an AI assistant)
+--------------------------------------------------------------------------------
+Target and protocol
+  - Target: daily mean PM2.5, modelled on a log scale, scored in original units.
+  - Two horizons: next day (h=1) and week ahead (days 1 to 7 issued every 7 days).
+    This is the same protocol as Milestone 2, so results are comparable.
+  - Tabular models use a "direct" strategy: one model for each horizon 1..7.
+Validation
+  - Four consecutive 90-day test folds (Oct 2025 to Jan 2026, Jan to Apr, Apr to
+    Jul, Jul to Oct 2026). Fold 4 is exactly the Milestone 2 hold-out
+    (23 Jul to 20 Oct 2026). The training window expands for each fold.
+  - Hyper-parameters are tuned only on data before fold 1: no test leakage.
+  - Metrics: RMSE, MAE, MAPE, R2, CPCB pollution-category accuracy; significance
+    by the Diebold-Mariano test.
+Inputs (79 features for tabular models)
+  - PM2.5 history, rolling means, intraday statistics (last hour, evening, morning,
+    max, min), PM10, NO2, CO, AQI, observed weather, calendar terms, and the
+    ECMWF weather forecast for the target day.
+  - ISSUE-TIME RULE: for a forecast h days ahead, only the weather forecast issued
+    h days earlier is used ("previous day h" in the Open-Meteo Previous Runs API),
+    so the model never sees information from the future.
+  - The forecast archive starts in March 2024. Earlier training days use the actual
+    weather as a stand-in; every test day uses a real archived forecast.
+Models
+  - Classical (no forecast inputs): Naive, ARIMA(3,0,3), SARIMA, Holt-Winters.
+  - Learners: Ridge, Random Forest, XGBoost, LightGBM, Prophet (no forecast inputs),
+    LSTM and GRU (5 seeds averaged).
+  - Ensemble = equal-weight mean of XGBoost, LightGBM, Random Forest, LSTM, GRU
+    (fixed before results were seen); it is the final model.
+Important files
+  - results/predictions_all_folds.csv: date, fold, horizon, actual and every model's
+    prediction (original units). All reported metrics can be recomputed from it.
+  - results/model_comparison_m3_holdout.csv and _rolling.csv: the main tables.
+
+--------------------------------------------------------------------------------
+6. COMMON PROBLEMS AND FIXES
+--------------------------------------------------------------------------------
+* "ModuleNotFoundError: No module named ..."
+    The packages are not installed in the active environment. Activate the
+    environment (step 2) and run "pip install -r code/requirements.txt" again.
+* The program hangs on macOS at the deep-learning step.
+    PyTorch and XGBoost/LightGBM contain conflicting OpenMP libraries. The code
+    already avoids this by running LSTM/GRU in a separate process
+    (milestone3_dl.py is started automatically). Do not merge the two scripts.
+* "pip install prophet" fails.
+    Prophet needs a C++ toolchain on some systems. See the official installation
+    notes at https://facebook.github.io/prophet/docs/installation.html (on Linux,
+    installing the build-essential package usually fixes it).
+* The dashboard shows a blank page or no charts.
+    Use an up-to-date browser; open the file directly (not inside an e-mail
+    preview). Charts redraw when you resize the window.
+* Numbers differ slightly from the report after a re-run.
+    Deep-learning results can vary slightly between machines and library versions.
+    On the project machine a clean re-run reproduced all tables exactly.
+* "results/cache" contains old results.
+    Delete the folder "results/cache" and run the analysis again.
+* No internet when running.
+    Fine: everything needed is in "data/". Internet is only needed to install
+    packages or to re-download the forecast archive.
+
+--------------------------------------------------------------------------------
+7. RESULTS IN ONE TABLE (PM2.5, micrograms per cubic metre; lower RMSE is better)
+--------------------------------------------------------------------------------
+                                          ARIMA (Milestone 2)    Ensemble (Milestone 3)
+  Next-day RMSE, M2 hold-out (90 days)         14.95                  10.53  (30% lower)
+  Next-day RMSE, four seasons (360 days)       22.90                  18.36  (20% lower)
+  Week-ahead RMSE, four seasons                32.66                  27.54  (16% lower)
+  Week-ahead R2, four seasons                   0.27                   0.48
+  Correct pollution category (next day)         57%                    67%
+Removing the weather forecast from the final XGBoost model raises its week-ahead RMSE
+from 30.27 to 34.03, so archived weather forecasts are what unlocked the week ahead.
+Known weakness: days above 120 micrograms per cubic metre are under-predicted.
+
+--------------------------------------------------------------------------------
+8. HONEST LIMITS
+--------------------------------------------------------------------------------
+  - Data are modelled grid values (CAMS / ERA5), not station readings, so extreme
+    peaks are smoothed. One city, one grid cell.
+  - Four 90-day test periods cover each season once.
+  - One weather model (ECMWF); boundary-layer height is not archived.
+  - The forecast archive is relied on as defined by its provider (Open-Meteo).
+
+--------------------------------------------------------------------------------
+9. PUBLISH ON GITHUB AND VERCEL
+--------------------------------------------------------------------------------
+GitHub (the whole project, about 30 MB; caches are excluded by .gitignore)
+  1. On github.com create a new EMPTY repository (do not add a README).
+  2. In a terminal, from inside the Milestone3 folder:
+         git init
+         git add .
+         git commit -m "Milestone 3: forecasting Delhi PM2.5"
+         git branch -M main
+         git remote add origin https://github.com/<your-username>/<repo-name>.git
+         git push -u origin main
+     (If you prefer to push the parent folder, that works too; then set
+      "Root Directory" to Milestone3 in the Vercel project settings.)
+
+  Suggested repository settings (on the repository page, "About" gear icon):
+     Name         delhi-pm25-forecasting
+     Description  Forecasting Delhi's PM2.5: ARIMA vs XGBoost, LightGBM, Prophet, LSTM,
+                  GRU and an ensemble, with archived weather forecasts (CSET 369)
+     Topics       time-series, forecasting, pm25, air-quality, delhi, xgboost, lstm, prophet
+     Website      paste the Vercel address here once it exists
+  The README is shown automatically on the repository's front page.
+
+Vercel (publishes the website: index.html, plus the report, slides and this guide)
+  1. Go to vercel.com, choose "Add New", then "Project", and import the GitHub
+     repository.
+  2. Leave the settings as they are: there is nothing to build, because index.html
+     is at the top level of the repository. If asked, choose Framework Preset
+     "Other". .vercelignore keeps code and data out of the website.
+  3. Click Deploy. In under a minute you get an address like
+     https://<project-name>.vercel.app that shows the dashboard. The footer links
+     download the report, slides and this guide.
+  Alternative from the terminal:
+         npm install -g vercel
+         cd Milestone3
+         vercel --prod
+  After re-running the analysis, refresh the website before pushing again:
+         python code/build/build_dashboard.py
+  Data attribution (Open-Meteo, CC BY 4.0; CAMS; ERA5; ECMWF) is already in the
+  dashboard footer and in README.md; keep it if you publish.
+
+--------------------------------------------------------------------------------
+10. IF YOU ASK AN AI ASSISTANT FOR HELP
+--------------------------------------------------------------------------------
+Paste this whole file first, then ask, for example:
+  "Walk me through running step 3 on Windows."
+  "Explain the issue-time rule in simple words."
+  "Why is the week-ahead error larger than the next-day error?"
+  "How do I add a new model to milestone3_analysis.py?"
+The assistant can use sections 1, 5 and 7 for context and section 6 for errors.
+================================================================================
